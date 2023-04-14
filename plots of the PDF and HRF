@@ -1,0 +1,68 @@
+# PDF of the exponentiated power Ishita distribution
+rm(list = ls())
+
+t <- seq(0.001, 10, .01)
+
+EPI <- function(c, theta, alpha) {
+  g <- ((alpha * theta^3) / (theta^3 + 2)) * (theta + t^(2 * alpha)) * t^(alpha - 1) * exp(-theta * t^alpha)
+  G <- 1 - (1 + (theta * t^alpha * (theta * t^alpha + 2)) / (theta^3 + 2)) * exp(-theta * t^alpha)
+  EPI <- c * g * G^(c - 1)
+  return(EPI)
+}
+
+plot(c(0, 2.5), c(0, 3.5), type = "n", xlab = "x", ylab = "pdf")
+
+c <- c(0.9, 0.5, 2.0, 2.5, 4.5)
+theta <- c(8.0, 6.5, 1.0, 2.0, 0.9)
+alpha <- c(2.5, 1.5, 2.5, 6.5, 2.9)
+cor1 <- c('black', 'darkred', 'darkblue', 'darkgreen', "darkorange")
+linhas <- c(1:5)
+
+for (i in seq_along(theta)) {
+    lines(t,EPI(c[i], theta[i], alpha[i]), lwd = rep(2, length(theta)), lty = linhas[i], col = cor1[i])
+}
+
+legend("topright", expression(
+    paste(c,"=0.9; ",theta,"=8.0; ",alpha,"=2.5"),
+    paste(c,"=0.5; ",theta,"=6.5; ",alpha,"=1.5"),
+    paste(c,"=2.0; ",theta,"=1.0; ",alpha,"=2.5"),
+    paste(c,"=2.5; ",theta,"=2.0; ",alpha,"=6.5"),
+    paste(c,"=4.5; ",theta,"=0.9; ",alpha,"=2.9")),
+    lty = c(1:5), lwd = rep(2,length(theta)), col = cor1,
+    bty = "n")
+  
+    # HRF of the exponentiated Ishita distribution
+rm(list = ls())
+
+t <- seq(0.001, 10, .01)
+
+hEPI <- function(c, theta, alpha) {
+  g <- ((alpha * theta^3) / (theta^3 + 2)) * (theta + t^(2 * alpha)) * t^(alpha - 1) * exp(-theta * t^alpha)
+  G <- 1 - (1 + (theta * t^alpha * (theta * t^alpha + 2)) / (theta^3 + 2)) * exp(-theta * t^alpha)
+  f <- c * g * G^(c - 1)
+  F <- G^c
+  h <- f / (1 - F)
+  return(h)
+}
+
+plot(c(0, 2.5), c(0, 4.5), type = "n", xlab = "x", ylab = "hrf")
+
+c <- c(0.3, 0.4, 0.45, 0.2, 0.1)
+theta <- c(1.4, 1.3, 1.2, 1.5, 1.6)
+alpha <- c(1.7, 1.5, 1.4, 1.8, 1.9)
+cor1 <- c('black', 'darkred', 'darkblue', 'darkgreen', "darkorange")
+linhas <- c(1:5)
+
+for (i in seq_along(theta)) {
+    lines(t,hEPI(c[i], theta[i], alpha[i]), lwd = rep(2,length(theta)), lty = linhas[i], col = cor1[i])
+}
+
+legend(0.25,4, expression(
+    paste(c,"=0.3; ",theta,"=1.4; ",alpha,"=1.7"),
+    paste(c,"=0.4; ",theta,"=1.3; ",alpha,"=1.5"),
+    paste(c,"=0.45; ",theta,"=1.2; ",alpha,"=1.4"),
+    paste(c,"=0.2; ",theta,"=1.5; ",alpha,"=1.8"),
+    paste(c,"=0.1; ",theta,"=1.6; ",alpha,"=1.9")),
+    lty = c(1:5), lwd = rep(2,length(theta)), col = cor1,
+    bty = "n")
+ 
