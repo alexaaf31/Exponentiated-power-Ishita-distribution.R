@@ -1,0 +1,30 @@
+# Moments of the EPI distribution in R
+rm(list = ls())
+
+EPI <- function(x) {
+  f1 <- (c * alpha * theta^3) / (theta^3 + 2)
+  f2 <- (theta + x^(2 * alpha))
+  f3 <- x^(alpha - 1)
+  f4 <- exp(-theta * x^alpha)
+  f5 <- (theta * x^alpha * (theta * x^alpha + 2)) / (theta^3 + 2)
+  f6 <- (1 - (1 + f5) * exp(-theta * x^alpha))^(c - 1)
+  fg <- f1 * f2 * f3 * f4 * f6
+  m1 <- x * fg
+  return(m1)
+}
+
+c <- 0.5
+theta <- 2.5
+alpha <- 0.5
+
+integrate(EPI,0,Inf)$value
+
+# Moments of the EPI in Mathematica program
+
+(* Define a function f with parameters c, theta, alpha, and s *)
+f[c_, theta_, alpha_, s_] := 
+ c (-1)^a 2^(b - d) Binomial[c - 1, a] Binomial[a, b] Binomial[b, d] (theta^(3 + b + d))/((theta^3 + 2)^(b + 1))
+ ((theta Gamma[1 + b + d + s/alpha])/((theta (a + 1))^(1 + b + d + s/alpha)) + (Gamma[3 + b + d + s/alpha])/((theta (a + 1))^(3 + b + d + s/alpha)))
+
+(* Evaluate the sum of f with specific values for c, theta, alpha, and s *)
+Sum[f[0.5, 2.5, 0.5, 1], {a, 0, 15}, {b, 0, a}, {d, 0, b}]
