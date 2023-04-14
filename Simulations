@@ -1,0 +1,146 @@
+# Acceptance-rejection of the EPI Distribution
+
+# Parameters
+c     = 2.0
+alpha = 0.5
+beta  = 10
+
+# EPI distribution PDF
+f = function(x) {
+  g = ((c * alpha * beta^3) / (beta^3 + 2)) * (beta + x^(2 * alpha)) * x^(alpha - 1) *
+    exp(-beta * x^alpha) * (1 - (1 + ((beta * x^alpha *(beta * x^alpha + 2)) /
+    (beta^3 + 2))) * exp(-beta * x^alpha))^(c - 1)
+  return(g)
+}
+
+# g(x) pdf
+g = function(x) {
+  return(beta * alpha * x^(alpha - 1) * exp(-beta * x^alpha))
+}
+
+# g(x) quantile function
+rw = function(n) {
+  u = runif(n)
+  Q = (-log(1 - u) / beta)^(1 / alpha)
+  return(Q)
+}
+
+t = rw(1000)
+M <- max(f(t) / g(t))
+
+# Generate random samples from EPI distribution
+rishita = function(f, g, M, n) {
+  naccepts = 0
+  y = NULL
+  while (naccepts < n) {
+    x <- rw(1)
+    u <- runif(1)
+    w <- f(x) / (M * g(x))
+    if (u <= w) {
+      y[naccepts] <- x
+      naccepts <- naccepts + 1
+    }
+  }
+  return(y)
+}
+
+y = rishita(f, g, M, 1000)
+
+# EPI distribution cdf
+cdf = function(x) {
+  f5 = (beta * x^alpha * (beta * x^alpha + 2)) / (beta^3 + 2)
+  f6 = (1 - (1 + f5) * exp(-beta * x^alpha))^c
+  return(f6)
+}
+
+# Graphically evaluate
+plot(ecdf(y), ylab = "Fn(y)", xlab = "y", main = "")
+curve(cdf(x), add = TRUE, col = 2)
+legend(0.8, 0.2, lwd = c(1), lty = c(1),
+       c("empirical cdf", "EPI cdf"),
+       col = c("black", "red"),
+       bty = "n")
+
+# pdf
+hist(y, probability = TRUE, border = "black", col = "white", main = "")
+curve(f(x), add = TRUE, col = 2, lwd = 2)
+legend("topright", lwd = c(1), lty = c(1),
+       c("histogram", "EPI pdf"),
+       col = c("black", "red"),
+       bty = "n")
+       
+       # Monte Carlo Simulation (MCS)
+       
+MCS = function(nrep = 1000, nobs, seed = 1986, c = 2.0, alpha = 0.5, beta = 10) {
+  time.start = Sys.time()
+  
+  logLikk = function(theta) {
+    c = theta[1]
+    alpha = theta[2]
+    beta = theta[3]
+    nobs = length(y)
+    loglik = log(c) + log(alpha) + 3 * log(beta) - log(beta^3 + 2) + log(beta + y^(2 * alpha)) +
+      (alpha - 1) * log(y) - beta * y^alpha + (c - 1) * log(1 - (1 + ((beta * y^alpha *
+      (beta * y^alpha + 2)) / (beta^3 + 2))) * exp(-beta * y^alpha))
+    minus.logL <- sum(-loglik, na.rm = F)
+    return(minus.logL)
+  }
+  
+  mlec = rep(0, nrep)
+  mlealpha = rep(0, nrep)
+  mlebeta = rep(0,nrep)
+  
+  set.seed(seed)
+  
+  faultcounter = 0
+  
+  # monte carlo loop
+  i = 0
+  while(i < nrep){
+    t = rw(nobs)
+    M <- max(f(t)/g(t))
+    y=rishita(f,g,M,nobs)
+    ir = optim(c(c,alpha,beta),logLikk, method="BFGS")
+    
+    if(ir$convergence == 0){
+      i = i + 1
+      mlec[i] = ir$par[1]
+      mlealpha[i] = ir$par[2]
+      mlebeta[i] = ir$par[3]
+    } else {
+      faultcounter = faultcounter + 1
+    }
+    
+  } # end of the Monte Carlo loop
+  
+  cmedium = mean(mlec)
+  alphamedium = mean(mlealpha)
+  betamedium = mean(mlebeta)
+  
+  cvies = cmedium - c
+  alphavies = alphamedium - alpha
+  betavies = betamedium - beta
+  
+  time.end = Sys.time()
+  
+  time.run = time.end - time.start
+  
+  cMSE = var(mlec) + (cvies)^2
+  alphaMSE = var(mlealpha) + (alphavies)^2
+  betaMSE = var(mlebeta) + (betavies)^2
+  
+  
+results=data.frame(nobs=nobs,nrep=nrep,seed=seed,c=c,alpha=alpha,
+                   beta=beta,cmedium=cmedium,alphamedium=alphamedium,
+                   betamedium=betamedium,cvies=cvies,alphavies=alphavies,
+                   betavies=betavies,cMSE=cMSE,alphaMSE=alphaMSE,
+                   betaMSE=betaMSE,failures=faultcounter,
+                   time=time.run)
+
+return(results)
+}
+
+MCS(nobs=50)
+MCS(nobs=100)
+MCS(nobs=300)
+MCS(nobs=600)
